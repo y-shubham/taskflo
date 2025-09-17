@@ -29,7 +29,7 @@
 
 ### 2) Clone & install
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/y-shubham/taskflo
 cd taskflo
 
 # Backend deps
