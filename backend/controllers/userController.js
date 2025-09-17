@@ -9,28 +9,33 @@ const createToken = (id) => {
     })
 }
 
-const loginUser = async (req,res) => {
-    const {email, password} = req.body;
-    try{
-        if(!email || !password){
-            return res.status(400).json({message: "Please enter all fields"})
-        }
-        const user = await userModel.findOne({email})
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    if (!email || !password)
+      return res.status(400).json({ message: "Please enter all fields" });
 
-        if(!user){
-            return res.status(400).json({message: "User does not exist"})
-        }
+    // normalize email
+    const user = await userModel
+      .findOne({ email: email.toLowerCase() })
+      .select("+password");
+    if (!user) return res.status(400).json({ message: "User does not exist" });
 
-        const isMatch = await bcrypt.compare(password, user.password)
-        if(!isMatch){
-            return res.status(400).json({message: "Invalid credentials"})
-        }
-        const token = createToken(user._id)
-        res.status(200).json({user,token})
-    } catch (error) {
-        res.status(500).json({message: error.message})
-    }
-}
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
+
+    const token = createToken(user._id);
+
+    // remove password before sending
+    const safeUser = user.toObject();
+    delete safeUser.password;
+
+    res.status(200).json({ user: safeUser, token });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 const registerUser = async (req,res) => {
     const {name, email, password} = req.body;
